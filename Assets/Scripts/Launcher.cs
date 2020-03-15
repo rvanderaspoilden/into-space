@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
@@ -8,15 +10,25 @@ public class Launcher : MonoBehaviourPunCallbacks {
     [SerializeField] private GameObject authentificationPanel;
     [SerializeField] private GameObject loaderPanel;
     [SerializeField] private GameObject lobbyPanel;
+    [SerializeField] private GameObject currentRoomPanel;
+    [SerializeField] private GameObject roomListPanel;
+    [SerializeField] private GameObject scrollViewContentRoomList;
+    [SerializeField] private LobbyRoom lobbyRoomPrefab;
     [SerializeField] private InputField nickNameInputField;
     [SerializeField] private Toggle rememberToggle;
 
     private string nickName;
     private bool remember;
+    private List<LobbyRoom> rooms;
+
+    public static Launcher instance;
 
     void Awake() {
+        instance = this;
         PhotonNetwork.AutomaticallySyncScene = true;
+        this.rooms = new List<LobbyRoom>();
         this.ShowPanel(this.authentificationPanel);
+        this.ShowLobbyPanel(this.roomListPanel);
     }
 
     private void Start() {
@@ -57,6 +69,12 @@ public class Launcher : MonoBehaviourPunCallbacks {
         }
     }
 
+    public void LeaveRoom() {
+        if (PhotonNetwork.IsConnected) {
+            PhotonNetwork.LeaveRoom();
+        }
+    }
+
     public void SetNickName(string name) {
         this.nickName = name;
     }
@@ -76,6 +94,10 @@ public class Launcher : MonoBehaviourPunCallbacks {
         PhotonNetwork.CreateRoom(roomName, roomOptions, TypedLobby.Default);
     }
 
+    public void JoinRoom(RoomInfo room) {
+        PhotonNetwork.JoinRoom(room.Name);
+    }
+
     private void ShowPanel(GameObject panelToShow) {
         this.authentificationPanel.SetActive(false);
         this.loaderPanel.SetActive(false);
@@ -84,8 +106,20 @@ public class Launcher : MonoBehaviourPunCallbacks {
         panelToShow.SetActive(true);
     }
 
+    private void ShowLobbyPanel(GameObject panelToShow) {
+        this.roomListPanel.SetActive(false);
+        this.currentRoomPanel.SetActive(false);
+
+        panelToShow.SetActive(true);
+    }
+
     public override void OnConnectedToMaster() {
         Debug.LogFormat("{0} connected to master server", PhotonNetwork.NickName);
+        PhotonNetwork.JoinLobby();
+    }
+
+    public override void OnJoinedLobby() {
+        Debug.Log("Joined Lobby");
         this.ShowPanel(this.lobbyPanel);
     }
 
@@ -103,5 +137,28 @@ public class Launcher : MonoBehaviourPunCallbacks {
 
     public override void OnJoinedRoom() {
         Debug.Log("Joined room");
+        this.ShowLobbyPanel(this.currentRoomPanel);
+    }
+
+    public override void OnLeftRoom() {
+        Debug.Log("Left room");
+        this.ShowLobbyPanel(this.roomListPanel);
+    }
+
+    public override void OnRoomListUpdate(List<RoomInfo> roomList) {
+        Debug.Log("Room list updated");
+        foreach (LobbyRoom room in this.rooms) {
+            Destroy(room.gameObject);
+        }
+
+        this.rooms.Clear();
+
+        foreach (RoomInfo room in roomList) {
+            if (room.MaxPlayers > 0) {
+                LobbyRoom lobbyRoom = Instantiate(this.lobbyRoomPrefab, this.scrollViewContentRoomList.transform);
+                lobbyRoom.Setup(room);
+                this.rooms.Add(lobbyRoom);
+            }
+        }
     }
 }

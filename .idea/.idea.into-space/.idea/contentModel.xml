@@ -373,8 +373,11 @@
           <e p="DragPanel.cs" t="Include" />
           <e p="DropMe.cs" t="Include" />
           <e p="Launcher.cs" t="Include" />
+          <e p="LobbyRoom.cs" t="Include" />
           <e p="PanelManager.cs" t="Include" />
+          <e p="PlayerLobby.cs" t="Include" />
           <e p="ResizePanel.cs" t="Include" />
+          <e p="RoomManager.cs" t="Include" />
           <e p="ScrollDetailTexture.cs" t="Include" />
           <e p="ShowSliderValue.cs" t="Include" />
           <e p="SimpleCameraController.cs" t="Include" />
