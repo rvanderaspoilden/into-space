@@ -6,7 +6,8 @@ using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Launcher : MonoBehaviourPunCallbacks {
+public class Launcher : MonoBehaviourPunCallbacks
+{
     [SerializeField] private GameObject authentificationPanel;
     [SerializeField] private GameObject loaderPanel;
     [SerializeField] private GameObject lobbyPanel;
@@ -65,7 +66,6 @@ public class Launcher : MonoBehaviourPunCallbacks {
     public void Disconnect() {
         if (PhotonNetwork.IsConnected) {
             PhotonNetwork.Disconnect();
-            this.ShowPanel(this.authentificationPanel);
         }
     }
 
@@ -90,7 +90,9 @@ public class Launcher : MonoBehaviourPunCallbacks {
             IsOpen = true
         };
 
-        string roomName = "Room of " + PhotonNetwork.NickName;
+        System.Random random = new System.Random();
+
+        string roomName = "Room of " + PhotonNetwork.NickName + "#" + random.Next(0, 999999);
         PhotonNetwork.CreateRoom(roomName, roomOptions, TypedLobby.Default);
     }
 
@@ -125,6 +127,7 @@ public class Launcher : MonoBehaviourPunCallbacks {
 
     public override void OnDisconnected(DisconnectCause cause) {
         Debug.Log("On Disconnected");
+        this.ShowPanel(this.authentificationPanel);
     }
 
     public override void OnCreatedRoom() {
@@ -137,6 +140,12 @@ public class Launcher : MonoBehaviourPunCallbacks {
 
     public override void OnJoinedRoom() {
         Debug.Log("Joined room");
+
+        Hashtable data = new Hashtable();
+        data["isReady"] = false;
+
+        PhotonNetwork.LocalPlayer.SetCustomProperties(data);
+
         this.ShowLobbyPanel(this.currentRoomPanel);
     }
 
@@ -146,16 +155,23 @@ public class Launcher : MonoBehaviourPunCallbacks {
     }
 
     public override void OnRoomListUpdate(List<RoomInfo> roomList) {
-        Debug.Log("Room list updated");
-        foreach (LobbyRoom room in this.rooms) {
-            Destroy(room.gameObject);
-        }
-
-        this.rooms.Clear();
-
         foreach (RoomInfo room in roomList) {
-            if (room.MaxPlayers > 0) {
-                LobbyRoom lobbyRoom = Instantiate(this.lobbyRoomPrefab, this.scrollViewContentRoomList.transform);
+            Debug.Log("Room to show : " + room.Name + ", isOpen = " + room.IsOpen + ", isVisible = " + room.IsVisible + ", removedFromList = " + room.RemovedFromList);
+
+            if (room.RemovedFromList) {
+                LobbyRoom roomToRemove = this.rooms.Find(elem => elem.GetRoom().Name == room.Name);
+
+                if (roomToRemove) {
+                    this.rooms.Remove(roomToRemove);
+                    Destroy(roomToRemove.gameObject);
+                }
+            } else {
+                LobbyRoom lobbyRoom = this.rooms.Find(elem => elem.GetRoom().Name == room.Name);
+
+                if (!lobbyRoom) {
+                    lobbyRoom = Instantiate(this.lobbyRoomPrefab, this.scrollViewContentRoomList.transform);
+                }
+
                 lobbyRoom.Setup(room);
                 this.rooms.Add(lobbyRoom);
             }
