@@ -11,4 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/WarRoom.unity
     guid: dfda5691bbf2dde48b4f25710edda373
+  - enabled: 1
+    path: Assets/Scenes/SCENE.unity
+    guid: 92fdffe4a1cb80b49912aae9c1570b96
   m_configObjects: {}

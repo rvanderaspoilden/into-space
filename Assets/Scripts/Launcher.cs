@@ -76,7 +76,7 @@ public class Launcher : MonoBehaviourPunCallbacks
     }
 
     public void StartGame() {
-        PhotonNetwork.LoadLevel("WarRoom");
+        PhotonNetwork.LoadLevel("SCENE");
     }
 
     public void SetNickName(string name) {
